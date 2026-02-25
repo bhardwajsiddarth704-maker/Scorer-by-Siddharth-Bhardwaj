@@ -846,7 +846,25 @@ let oldCheckOverLimit = checkOverLimit;
 checkOverLimit = function() {
   oldCheckOverLimit();
   checkMatchEnd();
-};
+};// ===== SAFE START FIX =====
+
+function masterStartMatch() {
+
+  // Original core start
+  document.getElementById("game").style.display = "block";
+
+  if (typeof setupPlayers === "function") setupPlayers();
+  if (typeof applyProUI === "function") applyProUI();
+  if (typeof addSaveResumeButtons === "function") addSaveResumeButtons();
+  if (typeof mobileOptimize === "function") mobileOptimize();
+  if (typeof initTournament === "function" && Object.keys(tournamentStats || {}).length === 0) {
+    initTournament();
+  }
+
+  if (typeof updateDisplay === "function") updateDisplay();
+
+  showHighlight("🏏 Match Started!");
+}
 </script>
 </body>
 </html>
