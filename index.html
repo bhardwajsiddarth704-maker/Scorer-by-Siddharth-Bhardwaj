@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cricketros Pro - Scorer</title>
+
+<style>
+body{
+    font-family:Arial;
+    background:#f4f4f4;
+    text-align:center;
+    padding:15px;
+}
+h1{color:#b71c1c;}
+.box{
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    margin-top:15px;
+}
+button{
+    padding:10px;
+    margin:5px;
+    font-size:15px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+}
+.run{background:#4caf50;color:white;}
+.wicket{background:#d32f2f;color:white;}
+.extra{background<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cricketros Pro - Scorer</title>
+
+<style>
+body{
+    font-family:Arial;
+    background:#f4f4f4;
+    text-align:center;
+    padding:15px;
+}
+h1{color:#b71c1c;}
+.box{
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    margin-top:15px;
+}
+button{
+    padding:10px;
+    margin:5px;
+    font-size:15px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+}
+.run{background:#4caf50;color:white;}
+.wicket{background:#d32f2f;color:white;}
+.extra{background:#ff9800;color:white;}
+.mode{background:#2196f3;color:white;}
+.highlight{
+    background:black;
+    color:#ffd700;
+    padding:10px;
+    border-radius:8px;
+    margin-top:10px;
+    display:none;
+}
+.commentary{
+    max-height:150px;
+    overflow:auto;
+    text-align:left;
+    font-size:14px;
+    margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🏏 Cricketros Pro</h1>
+
+<div class="box">
+<input type="text" id="team1" placeholder="Team 1 Name">
+<input type="text" id="team2" placeholder="Team 2 Name">
+<br><br>
+
+<select id="matchType">
+<option value="limited">Limited Overs</option>
+<option value="test">Test Match</option>
+</select>
+
+<input type="number" id="oversInput" placeholder="Overs (if limited)">
+<br><br>
+
+<button class="mode" onclick="startMatch()">Start Match</button>
+</div>
+
+<div class="box" id="game" style="display:none;">
+
+<h2 id="battingTeam"></h2>
+
+<div style="font-size:26px;">
+<span id="runs">0</span>/<span id="wickets">0</span>
+</div>
+
+<div>
+Overs: <span id="overs">0.0</span>
+</div>
+
+<div id="targetText"></div>
+
+<div>
+<button class="run" onclick="addRun(0)">Dot</button>
+<button class="run" onclick="addRun(1)">1</button>
+<button class="run" onclick="addRun(2)">2</button>
+<button class="run" onclick="addRun(3)">3</button>
+<button class="run" onclick="addRun(4)">4</button>
+<button class="run" onclick="addRun(6)">6</button>
+<button class="wicket" onclick="addWicket()">Wicket</button>
+<button class="extra" onclick="extraRun()">Wide/No Ball</button>
+</div>
+
+<div class="highlight" id="highlightBox"></div>
+
+<div class="commentary" id="commentaryBox"></div>
+
+</div>
+
+<script>
+
+let teams=[];
+let currentBatting=0;
+let innings=1;
+
+let runs=0;
+let wickets=0;
+let balls=0;
+let target=0;
+
+let matchMode="limited";
+let maxOvers=0;
+
+function startMatch(){
+
+teams[0]=team1.value;
+teams[1]=team2.value;
+
+if(!teams[0] || !teams[1]){
+alert("Enter both team names");
+return;
+}
+
+matchMode=document.getElementById("matchType").value;
+
+if(matchMode==="limited"){
+maxOvers=parseInt(document.getElementById("oversInput").value);
+if(!maxOvers){
+alert("Enter overs for limited match");
+return;
+}
+}
+
+document.getElementById("game").style.display="block";
+updateDisplay();
+addComment("Match started between "+teams[0]+" and "+teams[1]);
+
+}
+
+function addRun(r){
+runs+=r;
+balls++;
+generateCommentary(r);
+checkOverLimit();
+updateDisplay();
+}
+
+function addWicket(){
+if(wickets<10){
+wickets++;
+balls++;
+addComment("WICKET! Big breakthrough!");
+showHighlight("Huge Wicket!");
+checkOverLimit();
+updateDisplay();
+}
+}
+
+function extraRun(){
+runs++;
+addComment("Extra run (Wide/No Ball)");
+updateDisplay();
+}
+
+function checkOverLimit(){
+
+if(matchMode==="limited"){
+let currentOver=Math.floor(balls/6);
+if(currentOver>=maxOvers || wickets===10){
+nextInnings();
+}
+}
+
+if(matchMode==="test"){
+if(wickets===10){
+nextInnings();
+}
+}
+
+}
+
+function nextInnings(){
+
+if(innings===1){
+target=runs+1;
+innings=2;
+currentBatting=1;
+runs=0;
+wickets=0;
+balls=0;
+document.getElementById("targetText").innerText="Target: "+target;
+addComment("Second innings begins. Target is "+target);
+}else{
+finishMatch();
+
+}
+
+function finishMatch(){
+
+let result="";
+if(runs>=target){
+result=teams[1]+" WON THE MATCH 🎉";
+}else{
+result=teams[0]+" WON THE MATCH 🎉";
+}
+
+showHighlight(result);
+addComment(result);
+
+}
+
+function updateDisplay(){
+document.getElementById("battingTeam").innerText="Batting: "+teams[currentBatting];
+document.getElementById("runs").innerText=runs;
+document.getElementById("wickets").innerText=wickets;
+document.getElementById("overs").innerText=Math.floor(balls/6)+"."+(balls%6);
+}
+
+function generateCommentary(r){
+if(r==0) addComment("Dot ball. Pressure building.");
+if(r==1) addComment("Quick single taken.");
+if(r==2) addComment("Good running between wickets.");
+if(r==3) addComment("Excellent running for three!");
+if(r==4){ addComment("Beautiful FOUR!"); showHighlight("FOUR!"); }
+if(r==6){ addComment("Massive SIX!!!"); showHighlight("SIX!"); }
+}
+
+function showHighlight(text){
+let box=document.getElementById("highlightBox");
+box.style.display="block";
+box.innerText=text;
+setTimeout(()=>{box.style.display="none";},3000);
+}
+
+function addComment(text){
+let box=document.getElementById("commentaryBox");
+box.innerHTML="• "+text+"<br>"+box.innerHTML;
+}
+// ================= PLAYER SYSTEM =================
+
+let players = {
+  0: [],
+  1: []
+};
+
+let currentStriker = 0;
+let currentBowler = 0;
+
+function setupPlayers() {
+  for (let t = 0; t < 2; t++) {
+    players[t] = [];
+    for (let i = 1; i <= 11; i++) {
+      players[t].push({
+        name: teams[t] + " Player " + i,
+        runs: 0,
+        balls: 0,
+        wickets: 0,
+        ballsBowled: 0
+      });
+    }
+  }
+}
+
+function addRun(r) {
+  runs += r;
+  balls++;
+
+  let striker = players[currentBatting][currentStriker];
+  striker.runs += r;
+  striker.balls++;
+
+  generateCommentary(r);
+  checkOverLimit();
+  updateDisplay();
+}
+
+function addWicket() {
+  if (wickets < 10) {
+    wickets++;
+    balls++;
+
+    let bowler = players[1 - currentBatting][currentBowler];
+    bowler.wickets++;
+
+    addComment("WICKET! Bowler strikes!");
+    showHighlight("Huge Breakthrough!");
+
+    currentStriker++;
+    checkOverLimit();
+    updateDisplay();
+  }
+}
+
+function nextOverBowler() {
+  currentBowler = (currentBowler + 1) % 11;
+}
+
+// ================= MAN OF MATCH =================
+
+function calculateAwards() {
+
+  let bestBatsman = null;
+  let bestBowler = null;
+
+  let maxRuns = 0;
+  let maxWickets = 0;
+
+  for (let t = 0; t < 2; t++) {
+    players[t].forEach(p => {
+      if (p.runs > maxRuns) {
+        maxRuns = p.runs;
+        bestBatsman = p;
+      }
+      if (p.wickets > maxWickets) {
+        maxWickets = p.wickets;
+        bestBowler = p;
+      }
+    });
+  }
+
+  let manOfMatch = maxRuns >= (maxWickets * 20) ? bestBatsman : bestBowler;
+
+  addComment("🏆 Best Batsman: " + bestBatsman.name + " (" + bestBatsman.runs + " runs)");
+  addComment("🎯 Best Bowler: " + bestBowler.name + " (" + bestBowler.wickets + " wickets)");
+  addComment("🌟 Man of the Match: " + manOfMatch.name);
+
+  showHighlight("Man of the Match: " + manOfMatch.name);
+}
+
+// Modify finishMatch to call awards
+let oldFinishMatch = finishMatch;
+
+finishMatch = function() {
+  oldFinishMatch();
+  calculateAwards();
+};// ================= ADVANCED COMMENTARY SYSTEM =================
+
+function generateCommentary(runsScored) {
+
+  let comments = [
+    "Solid batting display!",
+    "Excellent timing!",
+    "Beautiful cricket shot!",
+    "Bowler under pressure!",
+    "Crowd going crazy!"
+  ];
+
+  if (runsScored === 4) {
+    addComment("FOUR! Cracking boundary!");
+    showHighlight("🔥 What a Shot!");
+  }
+  else if (runsScored === 6) {
+    addComment("SIX! Massive hit into the stands!");
+    showHighlight("🚀 That's Huge!");
+  }
+  else if (runsScored === 0) {
+    addComment("Dot ball. Good bowling.");
+  }
+  else {
+    addComment(comments[Math.floor(Math.random() * comments.length)]);
+  }
+}
+
+
+// ================= DROP CATCH SYSTEM =================
+
+function attemptWicketWithCatchChance() {
+
+  let dropChance = Math.random();
+
+  if (dropChance < 0.25) {
+    addComment("😱 Catch Dropped! Huge mistake!");
+    showHighlight("Dropped Catch!");
+    balls++;
+    updateDisplay();
+    return;
+  }
+
+  addWicket();
+}
+
+
+// Replace normal wicket function
+let originalAddWicket = addWicket;
+
+addWicket = function() {
+  attemptWicketWithCatchChance();
+};
+
+
+// ================= SPECIAL MATCH HIGHLIGHTS =================
+
+function showSpecialMoment(type) {
+
+  if (type === "hattrick") {
+    showHighlight("🎩 HATTRICK! History created!");
+    addComment("Unbelievable bowling spell!");
+  }
+
+  if (type === "milestone50") {
+    showHighlight("👏 Half Century!");
+    addComment("What an innings!");
+  }
+
+  if (type === "milestone100") {
+    showHighlight("💯 CENTURY!");
+    addComment("Masterclass performance!");
+  }
+}
+
+
+// ================= CHECK MILESTONES =================
+
+function checkMilestones() {
+
+  let striker = players[currentBatting][currentStriker];
+
+  if (striker.runs === 50) {
+    showSpecialMoment("milestone50");
+  }
+
+  if (striker.runs === 100) {
+    showSpecialMoment("milestone100");
+  }
+}
+
+
+// Modify addRun to include milestone check
+let originalAddRun = addRun;
+
+addRun = function(r) {
+  originalAddRun(r);
+  checkMilestones();
+};// ================= TOURNAMENT MODE =================
+
+let tournamentStats = {};
+
+function initTournament() {
+  tournamentStats = {};
+
+  for (let t = 0; t < 2; t++) {
+    players[t].forEach(p => {
+      tournamentStats[p.name] = {
+        runs: 0,
+        wickets: 0,
+        matches: 0
+      };
+    });
+  }
+}
+
+function updateTournamentStats() {
+  for (let t = 0; t < 2; t++) {
+    players[t].forEach(p => {
+      if (!tournamentStats[p.name]) {
+        tournamentStats[p.name] = { runs: 0, wickets: 0, matches: 0 };
+      }
+      tournamentStats[p.name].runs += p.runs;
+      tournamentStats[p.name].wickets += p.wickets;
+      tournamentStats[p.name].matches += 1;
+    });
+  }
+}
+
+function calculate// ================= TOURNAMENT MODE =================
+
+let tournamentStats = {};
+
+function initTournament() {
+  tournamentStats = {};
+
+  for (let t = 0; t < 2; t++) {
+    players[t].forEach(p => {
+      tournamentStats[p.name] = {
+        runs: 0,
+        wickets: 0,
+        matches: 0
+      };
+    });
+  }
+}
+
+function updateTournamentStats() {
+  for (let t = 0; t < 2; t++) {
+    players[t].forEach(p => {
+      if (!tournamentStats[p.name]) {
+        tournamentStats[p.name] = { runs: 0, wickets: 0, matches: 0 };
+      }
+      tournamentStats[p.name].runs += p.runs;
+      tournamentStats[p.name].wickets += p.wickets;
+      tournamentStats[p.name].matches += 1;
+    });
+  }
+}
+
+function calculateMVP() {
+
+  let bestPlayer = null;
+  let bestScore = 0;
+
+  for (let name in tournamentStats) {
+    let p = tournamentStats[name];
+    let score = p.runs + (p.wickets * 25);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestPlayer = name;
+    }
+  }
+
+  showHighlight("🏆 Tournament MVP: " + bestPlayer);
+  addComment("MVP based on overall performance!");
+}
+
+
+// Modify finishMatch again for tournament
+let oldFinish = finishMatch;
+
+finishMatch = function() {
+  oldFinish();
+  updateTournamentStats();
+  calculateMVP();
+};
+
+
+
+// ================= PLAYER IMAGE UPLOAD =================
+
+function addPlayerImageInput() {
+
+  let container = document.createElement("div");
+  container.innerHTML = `
+    <h3>Upload Player Image</h3>
+    <input type="file" id="playerImageUpload">
+    <br><br>
+    <img id="playerPreview" width="120">
+  `;
+
+  document.body.appendChild(container);
+
+  document.getElementById("playerImageUpload")
+    .addEventListener("change", function(event) {
+
+      let reader = new FileReader();
+
+      reader.onload = function() {
+        document.getElementById("playerPreview").src = reader.result;
+      };
+
+      reader.readAsDataURL(event.target.files[0]);
+    });
+}
+
+
+
+// ================= FULL SCORECARD =================
+
+function showFullScorecard() {
+
+  let scoreHTML = "<h2>Full Scorecard</h2>";
+
+  for (let t = 0; t < 2; t++) {
+
+    scoreHTML += "<h3>" + teams[t] + "</h3>";
+    scoreHTML += "<table border='1' cellpadding='5'>";
+    scoreHTML += "<tr><th>Player</th><th>Runs</th><th>Balls</th><th>Wickets</th></tr>";
+
+    players[t].forEach(p => {
+      scoreHTML += `
+        <tr>
+          <td>${p.name}</td>
+          <td>${p.runs}</td>
+          <td>${p.balls}</td>
+          <td>${p.wickets}</td>
+        </tr>
+      `;
+    });
+
+    scoreHTML += "</table><br>";
+  }
+
+  let div = document.createElement("div");
+  div.innerHTML = scoreHTML;
+  document.body.appendChild(div);
+}
+
+
+
+// ================= AUTO INIT TOURNAMENT =================
+
+let oldStart = startMatch;
+
+startMatch = function() {
+  oldStart();
+  if (Object.keys(tournamentStats).length === 0) {
+    initTournament();
+  }
+  addPlayerImageInput();
+};// ================= PROFESSIONAL UI STYLE =================
+
+function applyProUI() {
+
+  document.body.style.fontFamily = "Arial, sans-serif";
+  document.body.style.background = "#0f172a";
+  document.body.style.color = "white";
+  document.body.style.padding = "10px";
+
+  let buttons = document.querySelectorAll("button");
+  buttons.forEach(btn => {
+    btn.style.background = "#1e293b";
+    btn.style.color = "white";
+    btn.style.border = "none";
+    btn.style.padding = "10px 15px";
+    btn.style.margin = "5px";
+    btn.style.borderRadius = "8px";
+    btn.style.cursor = "pointer";
+  });
+
+  showHighlight("🔥 Pro Mode Activated");
+}
+
+
+// ================= SAVE MATCH SYSTEM =================
+
+function saveMatch() {
+
+  let matchData = {
+    runs,
+    wickets,
+    balls,
+    currentBatting,
+    players,
+    tournamentStats
+  };
+
+  localStorage.setItem("cricketMatchData", JSON.stringify(matchData));
+
+  showHighlight("💾 Match Saved Successfully!");
+  addComment("You can resume anytime.");
+}
+
+
+// ================= RESUME MATCH =================
+
+function resumeMatch() {
+
+  let saved = localStorage.getItem("cricketMatchData");
+
+  if (!saved) {
+    alert("No Saved Match Found!");
+    return;
+  }
+
+  let data = JSON.parse(saved);
+
+  runs = data.runs;
+  wickets = data.wickets;
+  balls = data.balls;
+  currentBatting = data.currentBatting;
+  players = data.players;
+  tournamentStats = data.tournamentStats;
+
+  updateDisplay();
+  showHighlight("🔄 Match Resumed!");
+}
+
+
+// ================= SAVE/RESUME BUTTONS =================
+
+function addSaveResumeButtons() {
+
+  let div = document.createElement("div");
+
+  div.innerHTML = `
+    <button onclick="saveMatch()">Save Match</button>
+    <button onclick="resumeMatch()">Resume Match</button>
+    <button onclick="showFullScorecard()">Full Scorecard</button>
+  `;
+
+  document.body.appendChild(div);
+}
+
+
+// ================= MOBILE OPTIMIZATION =================
+
+function mobileOptimize() {
+
+  if (window.innerWidth < 600) {
+    document.body.style.fontSize = "14px";
+  } else {
+    document.body.style.fontSize = "16px";
+  }
+}
+
+window.addEventListener("resize", mobileOptimize);
+
+
+// ================= AUTO ACTIVATE PRO MODE =================
+
+let oldStartMatchFinal = startMatch;
+
+startMatch = function() {
+  oldStartMatchFinal();
+  applyProUI();
+  addSaveResumeButtons();
+  mobileOptimize();
+};// ================= LIVE SCORE ANIMATION =================
+
+function animateScore() {
+  let scoreDiv = document.getElementById("score");
+
+  if (!scoreDiv) return;
+
+  scoreDiv.style.transition = "transform 0.2s";
+  scoreDiv.style.transform = "scale(1.2)";
+
+  setTimeout(() => {
+    scoreDiv.style.transform = "scale(1)";
+  }, 200);
+}
+
+// Modify updateDisplay to animate
+let oldUpdateDisplay = updateDisplay;
+
+updateDisplay = function() {
+  oldUpdateDisplay();
+  animateScore();
+};
+
+
+// ================= SOUND EFFECT SYSTEM =================
+
+function playSound(type) {
+
+  let audio = new Audio();
+
+  if (type === "four") {
+    audio.src = "https://www.soundjay.com/buttons/sounds/button-09.mp3";
+  }
+  else if (type === "six") {
+    audio.src = "https://www.soundjay.com/buttons/sounds/button-10.mp3";
+  }
+  else if (type === "wicket") {
+    audio.src = "https://www.soundjay.com/buttons/sounds/button-16.mp3";
+  }
+
+  audio.play();
+}
+
+// Enhance commentary for sound
+let oldGenerateCommentary = generateCommentary;
+
+generateCommentary = function(r) {
+
+  oldGenerateCommentary(r);
+
+  if (r === 4) playSound("four");
+  if (r === 6) playSound("six");
+};
+
+
+// Enhance wicket for sound
+let oldAddWicketSound = addWicket;
+
+addWicket = function() {
+  oldAddWicketSound();
+  playSound("wicket");
+};
+
+
+// ================= AUTO OVER SYSTEM =================
+
+let ballsPerOver = 6;
+
+function setBallsPerOver(num) {
+  ballsPerOver = num;
+}
+
+function checkOverLimit() {
+  if (balls % ballsPerOver === 0) {
+    addComment("Over Completed!");
+    nextOverBowler();
+  }
+}
+
+
+// ================= TEST MATCH MODE =================
+
+let matchType = "limited"; // limited or test
+
+function setMatchType(type) {
+  matchType = type;
+}
+
+function checkMatchEnd() {
+
+  if (matchType === "limited") {
+    if (balls >= totalOvers * ballsPerOver || wickets >= 10) {
+      finishMatch();
+    }
+  }
+
+  if (matchType === "test") {
+    if (wickets >= 10) {
+      finishMatch();
+    }
+  }
+}
+
+
+// Replace checkOverLimit with extended version
+let oldCheckOverLimit = checkOverLimit;
+
+checkOverLimit = function() {
+  oldCheckOverLimit();
+  checkMatchEnd();
+};
+</script>
+</body>
+</html>
